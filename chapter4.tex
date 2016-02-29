@@ -1,0 +1,276 @@
+\chapter{Multilevel models for the distribution of hosts and symbionts}
+\chapterauthor{Maxwell B. Joseph, William Stutz, Pieter T. J. Johnson}
+
+Symbiont occurrence is influenced by host occurrence and vice versa, which leads to correlations in host-symbiont distributions at multiple levels.
+Interactions between co-infecting symbionts within host individuals can cause correlations in the abundance of two symbiont species across individual hosts.
+Similarly, interactions between symbiont transmission and host population dynamics can drive correlations between symbiont and host abundance across habitat patches.
+If ignored, these interactions can confound estimated responses of hosts and symbionts to other factors.
+Here, we present a general hierarchical modeling framework for distributions of hosts and symbionts, estimating correlations in host-symbiont distributions at the among-site, within-site, among-species, and among-individual levels.
+We present an empirical example from a multi-host multi-parasite system involving amphibians and their micro- and macroparasites.
+Amphibian hosts and their parasites were correlated at multiple levels of organization.
+Macroparasites often co-infected individual hosts, but rarely co-infected with the amphibian chytrid fungus.
+Such correlations may result from interactions among parasites and hosts, joint responses to environmental factors, or sampling bias.
+Joint host-symbiont models account for environmental constraints and species interactions while partitioning variance and dependence in abundance at multiple levels.
+This framework can be adapted to a wide variety of study systems and sampling designs.
+
+
+\section{Introduction}
+
+Symbiotic organisms - those that live with, in, or on free living hosts - play important roles in disease dynamics, food production, and host health \citep{Bashan1998, Jones2008}.
+However, host-symbiont interactions complicate efforts to explain symbiont occurrence and abundance for several reasons.
+First, symbiont distributions depend on host distributions.
+In the extreme, obligate symbionts cannot exist without hosts \citep{Moran2000}.
+Symbionts also influence host distributions through effects on fitness and population dynamics \citep{Ebert2000, Lloyd-Smith2005}.
+Further complexity arises in systems with multi-host symbionts, and host individuals infected with multiple co-infecting symbionts.
+Symbionts occupying the same host individual can interact, such that one symbiont may directly affect the distribution of another symbiont at the individual level \citep{Telfer2010a}.
+Useful models of symbiont occurrence and abundance should accommodate these bidirectional influences and the hierarchical nature of host-symbiont interactions \citep{Mihaljevic2012}.
+
+Multilevel modeling provides a promising avenue to understand patterns in host and symbiont abundance at different levels of biological organization \citep{gelman2007data}.
+A general host-symbiont modeling framework must be multivariate: any interaction between a host and a symbiont involves at least two species.
+Further, useful methods should make use of observable host and symbiont data which often consist of discrete counts, but may also include binary measurements of habitat use or continuous measures of density.
+Continuous and discrete multivariate observations can be modeled by combining univariate distributions with multivariate linear predictors, leading to a multivariate probit for binary data, multivariate Poisson for counts, and multivariate lognormal for continuous positive observations \citep{Ashford1970, Aitchison1982, Aitchison1989}.
+Such models are increasingly being used to model distributions of free-living species while accounting for species interactions \citep{Wisz2013, Clark2014, Pollock2014, Warton2015}.
+
+Here we expand upon existing methods to develop a hierarchical, multivariate framework for modeling host and symbiont distributions that accounts for multiple levels of correlation, level-specific covariates, and flexible likelihood specifications.
+We begin by outlining the general features and logic of this approach.
+We then present an empirical case study of amphibian hosts and their parasites, revealing correlation among species at multiple levels and demonstrating the types of insights gained in practice.
+We conclude by discussing limitations and potential extensions.
+
+\section{Methods}
+
+While ecologists often seek to estimate the effects of one species on another species, this requires strong causal assumptions when working with observational data \citep{Pearl2000Causality}.
+Instead, correlations in species abundance and occurrence - potentially resulting from species interactions - can be modeled as a proxy, helping to generate hypotheses about interactions that ideally can be pursued experimentally \citep{Ovaskainen2010}.
+Due to the hierarchical nature of host-symbiont interactions, these correlations can occur at multiple levels \citep{Mideo2008}.
+Symbionts may be correlated at the level of host individuals, positively if two symbiont species often co-infect hosts \citep[e.g.,][]{Puoti2002}.
+Symbionts may also be correlated at the level of host species, positively if two symbionts tend to infect the same species \citep[e.g.,][]{Johnson2012}.
+Hosts and symbionts might also be correlated within and among spatial locations (hereafter "sites").
+While such correlations can arise through species interactions, they can also emerge from simultaneous responses to extrinsic factors or sampling bias.
+These alternative drivers of correlations are not guaranteed to be differentiable from observational data alone \citep{Pearl2000Causality, Dorazio2014}, emphasizing the importance of methods that limit causal assumptions.
+
+We consider a landscape with discrete habitat patches (sites) containing multiple species of hosts and symbionts.
+At each site, replicate surveys are conducted to measure host density, and symbiont abundance is observed by sampling individual hosts.
+We assume each host species $h=1, ..., H$ is present or absent at each site $i=1, ..., N$, with occurrence constant across surveys.
+If they are present, they have some non-zero site-level average density $\mu_{ih}$.
+The probability of occurrence $\psi_{ih}$ and expected density within a site are assumed to be proportional \citep{He2003}.
+Hosts may be present at a site but unobserved \citep{MacKenzie2002}.
+Conditional on occurrence, the probability of detection increases with density \citep{Royle2005}.
+In other words, sites favoring high density are commonly occupied, and abundant hosts are easier to detect than rare hosts.
+At site $i$, $J_i > 1$ repeat surveys are conducted, leading to the following likelihood or sampling distribution for host abundance observations:
+
+\begin{equation*}
+y_{ih} \sim \begin{cases}
+  \psi_{ih} \prod \limits_{j=1}^{J_i} f(y_{ihj}|\theta_{ihj}), & \sum \limits_{j=1}^{J_i} y_{ihj} > 0 \\
+  \psi_{ih} \prod \limits_{j=1}^{J_i}  f(0|\theta_{ihj}) + 1 - \psi_{ih}, &\text{otherwise}
+  \end{cases}
+\tag{eqn 1}
+\end{equation*}
+
+Where $y_{ih}$ is a vector of length $J_i$ with elements consisting of abundance measurements (e.g., counts) of species $h$ at site $i$ in each survey.
+This is a mixture model with components representing cases in which species $h$ is present or absent from site $i$ with probabilities $\psi_{ih}$ and $1 - \psi_{ih}$, respectively.
+Further, $f(y|\theta_{ihj})$ is a probability density or mass function with parameter(s) $\theta_{ihj}$ potentially varying across sites, species, and surveys \citep{verhoef2007}.
+If species $h$ is not observed at site $i$, then it was absent with probability $1-\psi_{ih}$ or present but unobserved with probability $\psi_{ih} \prod_{J_i} f(0|\theta_{ihj})$.
+False absences are more likely for species with low densities and those highly aggregated within sites.
+For simplicity we assume that detection implies species presence, but a likelihood could be specified to account for false positives \citep{Royle2006a}.
+
+We assume that the occupancy probability of species $h$ at site $i$ increases with expected density $\mu_{ih}$ as follows \citep{He2002}:
+
+\begin{equation*}
+logit(\psi_{ih}) = \gamma_{0h} + \gamma_{1h} log(\mu_{ih})
+\tag{eqn 2}
+\end{equation*}
+
+Here, $\gamma_{0h}$ is the probability of host species $h$ occurring at site $i$ on a logit scale when the mean density is one individual per unit area of habitat (e.g. per square meter), and $\gamma_{1h}$ is a parameter that describes the scaling between expected density and the probability of occupancy, which we expect to be positive.
+This occupancy submodel could also include covariates such as habitat area.
+
+Symbiont species $s=1, ..., S$ are present or absent at each site.
+At site $i$, $K_i$ host individuals are sampled and their infections quantified.
+Non-detection of symbiont $s$ at site $i$ can result from true absence or failure to sample an infected host, and sites favoring high symbiont abundance are more likely to be occupied:
+
+\begin{equation*}
+y_{is} \sim \begin{cases}
+  \psi_{is} \prod \limits_{k=1}^{K_i} f(y_{isk}|\theta_{isk}), & \sum \limits_{k=1}^{K_i} y_{isk} > 0 \\
+  \psi_{is} \prod \limits_{k=1}^{K_i} f(0|\theta_{isk}) + 1 - \psi_{is}, &\text{otherwise}
+  \end{cases}
+\tag{eqn 3}
+\end{equation*}
+
+\begin{equation*}
+logit(\psi_{is}) = \gamma_{0s} + \gamma_{1s} log(\mu_{is})
+\tag{eqn 4}
+\end{equation*}
+
+Every host and symbiont species has a site-level mean density, and these densities may be correlated e.g., if an abundant reservoir host increases infection in other hosts \citep{Ashford2003}.
+Species have some among-site variance in their abundances, and these variance parameters may differ across species.
+Species that are always at low or high abundance will have low variance, and species that are abundant in some sites, and absent from others will have higher variance.
+These correlation and variance parameters are used to construct a covariance matrix $\boldsymbol{\Sigma}_{site}$ with elements $\rho_{mn} \sigma_m \sigma_n$ in the $m^{th}$ row, $n^{th}$ column, where $\rho_{mn}$ is the correlation between species $m$ and $n$, and $\sigma_m$ is the among site standard deviation for species $m$.
+Each site has a random effect vector $\boldsymbol{\alpha}_i$ of length $H+S$: $\boldsymbol{\alpha}_i \sim N_{H+S}(\boldsymbol{0}, \boldsymbol{\Sigma}_{site})$, where $N_{d}(\boldsymbol{0}, \boldsymbol{\Sigma})$ represents a multivariate normal distribution with dimension $d$, mean vector $\boldsymbol{0}$, and covariance matrix $\boldsymbol{\Sigma}$.
+
+Within sites, hosts and symbiont density can vary among survey locations.
+Uniformly distributed species have low variance, and spatially aggregated species have high variance.
+Species are correlated within sites if they tend to be observed together in the same surveys more or less often then expected by chance, for example.
+We can represent these survey level correlations and variance parameters in a covariance matrix $\boldsymbol{\Sigma}_{survey}$, which gives rise to to $J_{tot} = \sum \limits_i j_i$ survey level random effect vectors $\boldsymbol{\alpha}_j$, each with length $H + S$: $\boldsymbol{\alpha}_j \sim N_{H + S}(\boldsymbol{0}, \boldsymbol{\Sigma}_{survey})$.
+Random effects may be adapted to alternative sampling designs.
+For instance, if hosts are sampled for symbionts independently from host density surveys, then symbionts are not associated with particular surveys and the survey-level random effects may instead have dimension $H$.
+
+Differences in overall mean abundance are represented with a host species specific random effect $\alpha_{0h}$ which is univariate normally distributed around a community mean, with among species variance.
+Together, these random effects contribute to the expected number of individual hosts of species $h$ detected in a survey $j$ at site $i$, here with a log-link:
+
+\begin{equation*}
+log(\mu_{ihj}) = \alpha_{0h} + \alpha_{jh} + \alpha_{ih}
+\tag{eqn 5}
+\end{equation*}
+
+Depending on survey design, this expectation might include an offset that accounts for among-survey variation in sampling time intervals or area \citep{gelman2007data}.
+
+The expected density of symbionts also includes an intercept $\alpha_{0s}$ and elements from the site-level and survey-level random effects.
+However, because of the nature of host-symbiont interactions, symbionts have the potential for correlation at additional levels.
+Specifically, symbionts may be correlated at the individual host level, e.g., if two symbionts commonly co-infect host individuals.
+We represent these host individual differences with $K_{tot} = \sum_i K_i$ multivariate normal random effects with mean zero and covariance matrix $\boldsymbol{\Sigma}_{indiv}$ including correlation terms and symbiont species specific variance terms representing how variable host individuals are in their infection abundances: $\boldsymbol{\alpha}_{k} \sim N_S(\boldsymbol{0}, \boldsymbol{\Sigma}_{indiv})$.
+
+Finally, hosts may vary in their symbiont infection abundances at the species level. This variation may be correlated if two host species are functionally alike, e.g., they tend to be similarly susceptible to infection across a range of symbiont species.
+To allow for species level variation we consider $h=1, ..., H$ multivariate normal random vectors, each with $S$ elements: $\boldsymbol{\alpha}_{h} \sim N_S(\boldsymbol{0}, \boldsymbol{\Sigma}_{species})$.
+
+Together, these random effects contribute to the expected infection load of symbiont $s$ at site $i$ in host individual $k$ of species $h$ sampled in survey $j$:
+
+\begin{equation*}
+log(\mu_{isk}) = \alpha_{0s} + \alpha_{is} + \alpha_{j[k]s} + \alpha_{h_k s} + \alpha_{ks}
+\tag{eqn 6}
+\end{equation*}
+
+If host sampling for symbionts occurs separately from host abundance surveys, then sampled hosts are not associated with surveys, simplifying the random effects:
+
+\begin{equation*}
+log(\mu_{isk}) = \alpha_{0s} + \alpha_{is} + \alpha_{h_k s} + \alpha_{ks}
+\tag{eqn 7}
+\end{equation*}
+
+\section{Case study: amphibian communities and their parasites}
+
+Amphibians in the San Francisco Bay Area of California are infected with a diverse suite of parasites, including macroparasitic helminth worms (\textit{Ribeiroia ondatrae} Looss, 1907, \textit{Echinostoma} sp., \textit{Cephalogonimus} sp., \textit{Alaria} sp.), and microparasites such as \textit{Ranavirus} sp. and the amphibian chytrid fungus \textit{Batrachochytrium dendrobatidis}, Longcore, Pessier \& D.K. Nichols (1999), hereafter referred to as \textit{Bd}.
+
+Five amphibian hosts comprise the majority of non-threatened (available for sampling) amphibian species: the Pacific chorus frog \textit{Pseudacris regilla} (Baird \& Girard, 1852), California newt \textit{Taricha torosa} (Rathke, in Eschscholtz, 1833), rough-skinned newt \textit{Taricha granulosa} (Skilton, 1849), western toad \textit{Anaxyrus boreas} Baird \& Girard, 1852, and the non-native American bullfrog \textit{Lithobates catesbeianus} (Shaw, 1802) \citep{Johnson2013}.
+Previous studies in this system have revealed correlations between parasites at the host individual and site levels \citep{Johnson2011c, Hoverman2013}.
+
+In 2013, field crews visited 87 wetland sites in Contra Costa, Alameda, and Santa Clara counties.
+At each site, crews conducted dip net sweep surveys ($\bar{J_i} = 9.9$, standard deviation $(s_{J_i}) = 1.2$, range $= [2, 15]$, $J_{tot} = 914$) to quantify amphibian density, recording the numbers and species identities of all amphibians observed.
+Crews collected hosts at each site to quantify parasite infections ($\bar{K_i} = 17.8$, $s_{K_i}=12.7$, range $=[1, 82]$, $K_{tot} = 1550$), and these collection events were separate from the sweep surveys.
+Collected hosts were larval or recently metamorphosed.
+We assessed macroparasite infection abundance via dissection \citep{Johnson2013}, and infection loads of Bd and \textit{Ranavirus} using quantitative polymerase chain reaction of skin swabs and organ tissue, respectively \citep{Hyatt2007, Hoverman2010}.
+
+\section{Parameter estimation}
+
+We used a Bayesian approach to estimate parameters, combining prior information with a Poisson likelihood to generate a posterior distribution for unknown quantities.
+We simulated samples from the posterior using Markov chain Monte Carlo (MCMC) sampling in the probabilistic programming language Stan \citep{Hoffman2014} \nocite{stan-software:2015, rstan-software:2015}.
+All data and code required to reproduce the analysis is available in the code supplement.
+
+\section{Results}
+
+We uncovered correlations between hosts and parasites at every level in the model.
+At the site level, we detected multiple correlations between hosts and parasites (Figure \ref{fig:amg_site}).
+Sites with high densities of Pacific chorus frogs had high densities of California newts and western toads, possibly due to similar habitat requirements \citep{Joseph2015}.
+Sites with high densities of chorus frogs had higher Bd infection loads, consistent with this species' role as a reservoir host \citep{Reeder2012}.
+Sites with high levels of infection of \textit{Cephalogonimus} tended to have lower levels of infection with Bd.
+Macroparasites were positively correlated across sites, probably due to availability of planorbid snails that release macroparasite infective stages (cercariae), and deposition of parasite eggs in feces of carnivorous definitive hosts.
+
+Within sites at the survey level, California newts correlated positively with rough-skinned newts and Pacific chorus frogs (Figure \ref{fig:amg_survey}).
+These correlations imply that these species tend to be co-aggregated within sites, potentially due to similar microhabitat preferences.
+
+At the host species level, among-parasite correlations were estimated with low precision as we would expect when trying to estimate a correlation with five points (host species).
+However, some posteriors leaned toward positive correlations e.g., between Bd and \textit{Alaria} (Figure \ref{fig:amg_species}).
+This was driven by high infection abundances of most parasites in Pacific chorus frogs, consistent with these fast-lived hosts investing little in parasite defense \citep{Johnson2012}.
+More host species are needed to make reliable inference at this level.
+
+At the individual host level macroparasite loads correlated positively, so that if an individual was heavily infected with one macroparasite, it was more likely to be heavily infected with other macroparasites (Figure \ref{fig:amg_indiv}).
+These positive correlations can occur despite negative within-host interactions \citep{Johnson2012d}.
+For instance \textit{Ribeiroia} and \textit{Echinostoma} both have negative effects on the persistence of one another within host individuals, and the positive correlation may result from these parasites having similar niche requirements and host preferences \citep{Johnson2011c}.
+In contrast, Bd correlated negatively with three macroparasites: \textit{Ribeiroia}, \textit{Alaria}, and \textit{Echinostoma}.
+Parasite interactions could drive these correlations or they could result from confounding variables.
+For example, host age increases cumulative exposure, confounding inference on parasite interactions derived from correlations.
+Such correlations may disappear after including the confounding trait as a covariate, contingent on the validity of the model with respect to the true latent processes \citep{Pearl2000Causality}.
+Last, correlations could arise from sampling bias \citep{berkson1946}.
+For instance, if Bd or \textit{Echinostoma} infection increases catchability, then these two parasites will correlate negatively in our sample even if they are not correlated within the population.
+
+We partitioned variation in host and parasite abundance among model levels to better understand the relative strength of processes operating at different scales.
+This analysis aims to summarize the correlations and extra-Poisson variance induced by the random effects.
+We considered effective variance $V_e(X):=|\boldsymbol{\Sigma}_X|^{1/d}$, the $d-$th root of the determinant of a covariance matrix $\boldsymbol{\Sigma}_X$ with dimension $d$, which represents the average scatter in any direction \citep{Pena2003}.
+We also considered effective dependence $D_e(X):= 1 - |\boldsymbol{R}_X|^{1/d}$, where $\boldsymbol{R}_X$ is a correlation matrix, which captures the stochastic dependence among species \citep{Pena2003}.
+If species tend to be highly correlated, this parameter will be close to one.
+With no correlation among species, effective dependence is zero.
+Within-site, among-survey variation accounted for less variation in host abundance than among site random effects (Figure \ref{fig:vardep}).
+For parasites, variation among host individuals exceeded among-site variation.
+This is striking, but consistent with the notion that parasites are overdispersed and aggregated among host individuals \citep{Anderson1978b}.
+Despite high variance, parasite abundance showed relatively low dependence at the individual level.
+Effective dependence was comparable across other model levels, which might be expected if species interactions and/or joint responses to covariates similarly influence patterns of co-aggregation at these levels.
+
+\section{Discussion}
+
+We presented a general hierarchical modeling framework to understand correlations and drivers of host and symbiont abundance.
+This builds upon existing multi-species abundance models and specifically extends a two symbiont abundance model by Stutz et al. \textit{in review}, allowing for more than two species of symbionts, inclusion of hosts (any number of species), partially observed occurrence states, and greater flexibility in likelihood specification.
+Many host-symbiont distributions could be investigated with this method beyond host-parasite associations, including commensal and mutualistic symbionts of plants and animals.
+
+This approach has been described primarily from a causally agnostic perspective, in which we are estimating unstructured correlations among species, but alternative approaches could be taken.
+If there is a known causal direction, e.g., in an experimental setting, one could extend this method to model the effect of host density on symbiont abundance rather than their correlation.
+Estimation of many covariance matrices is a rather data-hungry operation, particularly when the correlation parameters are free to vary independently.
+If less information were available, it may be advantageous to either include structure for the correlation parameters (e.g., \citet{Dorazio2014}), or adopt a latent factor approach as recently described by \citet{Warton2015}.
+In the context of host-symbiont models, latent factors could be used at multiple levels to account for unobserved site, host, and species level characteristics.
+
+Another advantage of this joint modeling approach is the ability to decompose variation and dependence across multiple levels of organization.
+Effective variance and dependence may reflect the relative importance of processes at different levels of organization.
+For instance, we found variation among host species in parasite abundance comparable to variation among spatial locations, both of which exceeded variation within sites.
+Generally, the contribution of model levels to effective variance will differ among study systems, and the ability to compare across levels should be valuable in determining how to begin model expansion.
+In our case study for instance, a logical next step would be inclusion of site and host individual level covariates.
+
+Alternative likelihood functions, including those accounting for measurement error, can be readily combined with this method.
+Here we made use of a Poisson likelihood, but some situations may call for the use of zero-inflated probability distributions with support for all real postive values, such as a zero-inflated lognormal or gamma \citep{Miller2012a}.
+This would allow for direct modeling of observations generated via quantitative polymerase chain reaction, typical of applications to viruses and bacteria, and environmental DNA of free-living species.
+Continuous distributions would circumvent the need to round values for use with Poisson or negative binomial distributions with integer support.
+Last, we have assumed that infections are detected without error, but a rich set of methods could be applied to account for error in this measurement process \citep{Lachish2012, Miller2012a}.
+
+We assumed that sites favoring high density are more likely to be occupied.
+However, if different processes drive species occurrence and abundance, then alternative occurrence submodels could be developed.
+In particular, spatial and temporal dependence may be useful for representing limits to species occurrence \citep{Holt2000}.
+Future developments of this approach might prioritize inclusion of spatiotemporally explicit colonization dynamics that account for occupancy status of neighboring sites, habitat quality, and dispersal functions \citep{Broms2015}.
+These approaches will prove useful to understand how much of the spread of an invasive symbiont may be due to changes in the host distribution vs. changes in the symbiont distribution alone, with potential applications to the management of emerging infectious diseases \citep{Mitchell2006}.
+
+Symbionts have received an increased appreciation over past decades as the field of disease ecology has gained momentum and as modern genetic methods have increased our ability to sample unculturable communities \citep{Schrag1995, Riesenfeld2004}.
+However, the development of methods to understand the distribution of symbionts has not kept pace with developments in free living species \citep{Bailey2014}.
+The approach presented here draws upon these developments with the goal of producing a general approach that can be readily adapted to other host-symbiont systems.
+Simultaneously modeling hosts and their symbionts in this hierarchical framework provides a powerful method to dissect patterns of occurrence and abundance for free living and symbiotic organisms.
+
+\section{Acknowledgments}
+
+We thank Melina Allahverdian, Dana Calhoun, Kelly DeRolf, Jackie Gregory, Emily Hannon, Jeremy Henderson, Megan Housman, Aaron Klingborg, Bryan LaFonte, Keegan McCaffrey, Travis McDevitt-Galles, Mary Toothman, and Vanessa Wuerthner for assistance with data collection.
+We also thank Tad Dallas, Helen McCreery, Joseph Mihaljevic, Lauren Shoemaker, Timothy Szewczyk, and Topher Weiss-Lehman for feedback on the manuscript.
+Finally, we gratefully acknowledge contributions of data and intellectual suggestions from Cheryl Briggs, Jason Hoverman, Jason Rohr, and Andrew Blaustein.
+This research was supported by funding from the National Institutes of Health, Ecology and Evolution of Infectious Diseases Program (R01GM109499), the National Science Foundation (DEB-1149308), and the David and Lucile Packard Foundation.
+The content is solely the responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health.
+
+\begin{figure}[ht]\centering
+\includegraphics[width=\linewidth]{figs/ch4/amg_site}
+\caption[Site level variance covariance matrix and random effect posteriors]{Site level variance covariance matrix and random effect posteriors. Diagonal elements display the among-site standard deviation in abundance for all host and parasite species (Anbo = \textit{Anaxyrus boreas}, Psre = \textit{Pseudacris regilla}, Lica = \textit{Lithobates catesbeianus}, Tagr = \textit{Taricha granulosa}, Tato = \textit{Taricha torosa}, Rib = \textit{Ribeiroia ondatrae}, Echino = \textit{Echinostoma} sp., Cephalo = \textit{Cephalogonimus} sp., Alaria = \textit{Alaria} sp., Rv = \textit{Ranavirus} sp., Bd = \textit{Batrachochytrium dendrobatidis}). Green indicates hosts and blue parasites. Upper triangular elements show among-species correlation parameters. Black indicates correlations that are probably positive or probably negative ($95\%$ of posterior probability mass greater than or less than zero); grey indicates otherwise. Lower triangular elements show bivariate scatter plots of the posterior means of the site-level random effects corresponding to the intersection of the species in the rows and columns.}
+\label{fig:amg_site}
+\end{figure}
+
+\begin{figure}[ht]\centering
+\includegraphics[width=\linewidth]{figs/ch4/amg_survey}
+\caption[Survey level variance covariance matrix and random effect posteriors]{Survey level variance covariance matrix and random effect posteriors. Diagonal elements display the among-survey standard deviation in abundance for host species (Anbo = \textit{Anaxyrus boreas}, Psre = \textit{Pseudacris regilla}, Lica = \textit{Lithobates catesbeianus}, Tagr = \textit{Taricha granulosa}, Tato = \textit{Taricha torosa}). Upper triangular elements show among-species correlation parameters. Black indicates correlations that are probably positive or probably negative ($95\%$ of posterior probability mass greater than or less than zero); grey indicates otherwise. Lower triangular elements show bivariate scatter plots of the posterior means of the survey-level random effects corresponding to the intersection of the species in the rows and columns.}
+\label{fig:amg_survey}
+\end{figure}
+
+\begin{figure}[ht]\centering
+\includegraphics[width=\linewidth]{figs/ch4/amg_species}
+\caption[Host species level variance covariance matrix and random effect posteriors]{Host species level variance covariance matrix and random effect posteriors. Diagonal elements display the among host species standard deviation in abundance for parasite species (Rib = \textit{Ribeiroia ondatrae}, Echino = \textit{Echinostoma} sp., Cephalo = \textit{Cephalogonimus} sp., Alaria = \textit{Alaria} sp., Rv = \textit{Ranavirus} sp., Bd = \textit{Batrachochytrium dendrobatidis}). Upper triangular elements show among-species correlation parameters. Black indicates correlations that are probably positive or probably negative ($95\%$ of posterior probability mass greater than or less than zero); grey indicates otherwise. Lower triangular elements show bivariate smoothed scatter plots of species-level random effects, with host species codes printed at the posterior means (Anbo = \textit{Anaxyrus boreas}, Psre = \textit{Pseudacris regilla}, Lica = \textit{Lithobates catesbeianus}, Tagr = \textit{Taricha granulosa}, Tato = \textit{Taricha torosa}).}
+\label{fig:amg_species}
+\end{figure}
+
+\begin{figure}[ht]\centering
+\includegraphics[width=\linewidth]{figs/ch4/amg_indiv}
+\caption[Individual level variance covariance matrix and random effect posteriors]{Individual level variance covariance matrix and random effect posteriors. Diagonal elements display the among host individual standard deviation in abundance for parasite species (Rib = \textit{Ribeiroia ondatrae}, Echino = \textit{Echinostoma} sp., Cephalo = \textit{Cephalogonimus} sp., Alaria = \textit{Alaria} sp., Rv = \textit{Ranavirus} sp., Bd = \textit{Batrachochytrium dendrobatidis}). Upper triangular elements show among-individual correlation parameters. Black indicates correlations that are probably positive or probably negative ($95\%$ of posterior probability mass greater than or less than zero); grey indicates otherwise. Lower triangular elements show bivariate scatter plots of the posterior means of the individual-level random effects corresponding to the intersection of the species in the rows and columns.}
+\label{fig:amg_indiv}
+\end{figure}
+
+\begin{figure}[ht]\centering,
+\includegraphics[width=\linewidth]{figs/ch4/vardep}
+\caption[Bivariate posterior distributions of the effective variance and dependence]{Bivariate posterior distributions of the effective variance and dependence for the multivariate random effects. Each point represents a simulated draw from the posterior. Effective variance measures the magnitude of spread in any direction of the random effects, and effective dependence measures the magnitude of among-species correlation.}
+\label{fig:vardep}
+\end{figure}

@@ -1,0 +1,81 @@
+\documentclass[defaultstyle,11pt]{thesis}
+
+\usepackage{amssymb}		% to get all AMS symbols
+\usepackage{amsmath}
+\usepackage{graphicx}		% to insert figures
+\usepackage{hyperref}		% PDF hyperreferences??
+\usepackage{natbib}
+\usepackage{rotating}
+
+%%%%%%%%%%%%   All the preamble material:   %%%%%%%%%%%%
+
+\title{Tools for the occurrence of free-living and symbiotic organisms in space and time}
+
+\author{Maxwell B.}{Joseph}
+
+\otherdegrees{B.S., University of California Davis, 2008}
+
+\degree{Doctor of Philosophy}		%  #1 {long descr.}
+	{Ph.D., Ecology and Evolutionary Biology}		%  #2 {short descr.}
+
+\dept{Department of}			%  #1 {designation}
+	{Ecology and Evolutionary Biology}		%  #2 {name}
+
+\advisor{Prof.}				%  #1 {title}
+	{Pieter T. J. Johnson}			%  #2 {name}
+
+\reader{Prof. Vanja Dukic}
+
+\readerThree{Prof. Samuel Flaxman}		%  3rd person to sign thesis
+
+\readerFour{Prof. Andrew Martin}
+
+\readerFive{Prof. Valerie McKenzie}
+
+\abstract{  \OnePageChapter	% because it is very short
+
+	Often the abstract will be long enough to require
+	more than one page, in which case the macro
+	``$\backslash$OnePageChapter'' should {\it not}
+	be used.
+
+	But this one isn't, so it should.
+	}
+
+\dedication[Dedication]{	% NEVER use \OnePageChapter here.
+	To my family and friends, bipedal and otherwise.
+	}
+
+\acknowledgements{	\OnePageChapter	% *MUST* BE ONLY ONE PAGE!
+	Here's where you acknowledge folks who helped.
+	But keep it short, i.e., no more than one page,
+	as required by the Grad School Specifications.
+	}
+
+% \IRBprotocol{E927F29.001X}	% optional!
+
+\ToCisShort	% use this only for 1-page Table of Contents
+
+\LoFisShort	% use this only for 1-page Table of Figures
+% \emptyLoF	% use this if there is no List of Figures
+
+\LoTisShort	% use this only for 1-page Table of Tables
+% \emptyLoT	% use this if there is no List of Tables
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%       BEGIN DOCUMENT...         %%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\input macros.tex
+\input chapter1.tex
+\input chapter2.tex
+\input chapter3.tex
+\input chapter4.tex
+
+%%%%%%%%%   then the Bibliography, if any   %%%%%%%%%
+\bibliographystyle{apalike}	% or "siam", or "alpha", etc.
+\bibliography{refs}		% Bib database in "refs.bib"
+
+\end{document}
